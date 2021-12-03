@@ -340,7 +340,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 }
 
 //*****************************************************************************
-void microrl_set_complete_callback (microrl_t * pThis, char ** (*get_completion)(int, const char* const*))
+void microrl_set_complete_callback (microrl_t * pThis, int (*get_completion)(int, char**, int, const char* const*))
 {
 	pThis->get_completion = get_completion;
 }
@@ -492,8 +492,8 @@ static int common_len (char ** arr)
 //*****************************************************************************
 static void microrl_get_complite (microrl_t * pThis) 
 {
-	char const * tkn_arr[_COMMAND_TOKEN_NMB];
-	char ** compl_token; 
+	char const * tkn_arr[_COMMAND_TOKEN_NMB] = {};
+	char * compl_token[_COMPLETE_MAX] = {};
 	
 	if (pThis->get_completion == NULL) // callback was not set
 		return;
@@ -501,34 +501,40 @@ static void microrl_get_complite (microrl_t * pThis)
 	int status = split (pThis, pThis->cursor, tkn_arr);
 	if (pThis->cmdline[pThis->cursor-1] == '\0')
 		tkn_arr[status++] = "";
-	compl_token = pThis->get_completion (status, tkn_arr);
-	if (compl_token[0] != NULL) {
-		int i = 0;
-		int len;
+	(void)pThis->get_completion (_COMPLETE_MAX, compl_token, status, tkn_arr);
+	if (NULL == compl_token[0]) {
+		/* no completions */
 
-		if (compl_token[1] == NULL) {
-			len = strlen (compl_token[0]);
-		} else {
-			len = common_len (compl_token);
-			terminal_newline (pThis);
-			while (compl_token [i] != NULL) {
-				pThis->print (compl_token[i]);
-				pThis->print (" ");
-				i++;
-			}
-			terminal_newline (pThis);
-			print_prompt (pThis);
-		}
-		
-		if (len) {
-			microrl_insert_text (pThis, compl_token[0] + strlen(tkn_arr[status-1]), 
-																	len - strlen(tkn_arr[status-1]));
-			if (compl_token[1] == NULL) 
-				microrl_insert_text (pThis, " ", 1);
+	} else if (NULL == compl_token[1]) {
+		int len = strlen (compl_token[0]);
+		if (0 < len) {
+			microrl_insert_text (pThis,
+				compl_token[0] + strlen(tkn_arr[status-1]),
+				len - strlen(tkn_arr[status-1]));
+			microrl_insert_text (pThis, " ", 1);
 		}
 		terminal_reset_cursor (pThis);
 		terminal_print_line (pThis, 0, pThis->cursor);
-	} 
+
+	} else {
+		int i = 0;
+		int len = common_len (compl_token);
+		terminal_newline (pThis);
+		while (NULL != compl_token [i]) {
+			pThis->print (compl_token[i]);
+			pThis->print (" ");
+			i++;
+		}
+		terminal_newline (pThis);
+		print_prompt (pThis);
+		if (0 < len) {
+			microrl_insert_text (pThis,
+				compl_token[0] + strlen(tkn_arr[status-1]),
+				len - strlen(tkn_arr[status-1]));
+		}
+		terminal_reset_cursor (pThis);
+		terminal_print_line (pThis, 0, pThis->cursor);
+	}
 }
 #endif
 
