@@ -16,8 +16,6 @@ BUGS and TODO:
 
 //#define DBG(...) fprintf(stderr, "\033[33m");fprintf(stderr,__VA_ARGS__);fprintf(stderr,"\033[0m");
 
-char * prompt_default = _PROMPT_DEFAULT;
-
 #ifdef _USE_HISTORY
 
 #ifdef _HISTORY_DEBUG
@@ -333,7 +331,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 #ifdef _USE_CTRL_C
 	pThis->sigint = NULL;
 #endif
-	pThis->prompt_str = prompt_default;
+	pThis->prompt_str = _PROMPT_DEFAULT;
 	pThis->print = print;
 #ifdef _ENABLE_INIT_PROMPT
 	print_prompt (pThis);
@@ -341,7 +339,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 }
 
 //*****************************************************************************
-void microrl_set_complete_callback (microrl_t * pThis, int (*get_completion)(int, char**, int, const char* const*))
+void microrl_set_complete_callback (microrl_t * pThis, int (*get_completion)(int, char const*[], int, const char* const*))
 {
 	pThis->get_completion = get_completion;
 }
@@ -429,7 +427,7 @@ static int escape_process (microrl_t * pThis, char ch)
 
 //*****************************************************************************
 // insert len char of text at cursor position
-static int microrl_insert_text (microrl_t * pThis, char * text, int len)
+static int microrl_insert_text (microrl_t * pThis, char const * text, int len)
 {
 	int i;
 	if (pThis->cmdlen + len < _COMMAND_LINE_LEN) {
@@ -469,11 +467,11 @@ static void microrl_backspace (microrl_t * pThis)
 #ifdef _USE_COMPLETE
 
 //*****************************************************************************
-static int common_len (char ** arr)
+static int common_len (char const * arr[])
 {
 	int i;
 	int j;
-	char *shortest = arr[0];
+	char const *shortest = arr[0];
 	int shortlen = strlen(shortest);
 
 	for (i = 0; arr[i] != NULL; ++i)
@@ -494,7 +492,7 @@ static int common_len (char ** arr)
 static void microrl_get_complite (microrl_t * pThis) 
 {
 	char const * tkn_arr[_COMMAND_TOKEN_NMB] = {};
-	char * compl_token[_COMPLETE_MAX] = {};
+	char const * compl_token[_COMPLETE_MAX] = {};
 	
 	if (pThis->get_completion == NULL) // callback was not set
 		return;
