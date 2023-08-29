@@ -3,9 +3,6 @@
 
 #include "microrl_config.h"
 
-#define true  (1U)
-#define false (0U)
-
  /* define the Key codes */
 #define KEY_NUL 0 /**< ^@ Null character */
 #define KEY_SOH 1 /**< ^A Start of heading, = console interrupt */

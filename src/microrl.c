@@ -5,6 +5,7 @@ BUGS and TODO:
 -- rewrite history for use more than 256 byte buffer
 */
 
+#include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
